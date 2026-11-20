@@ -5,6 +5,8 @@ const env = require('../../../config/env');
 const environment = process.env.NODE_ENV || 'development';
 const sequelizeConfig = config[environment];
 
+const isRDS = sequelizeConfig.host && sequelizeConfig.host.includes('rds.amazonaws.com');
+
 const sequelize = new Sequelize(
   sequelizeConfig.database,
   sequelizeConfig.username,
@@ -20,7 +22,14 @@ const sequelize = new Sequelize(
       min: 0,
       acquire: 30000,
       idle: 10000
-    }
+    },
+    ...(isRDS && {
+      dialectOptions: {
+        ssl: {
+          rejectUnauthorized: false
+        }
+      }
+    })
   }
 );
 

@@ -9,6 +9,12 @@ module.exports = {
     port: env.db.port,
     dialect: env.db.connection,
     logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     define: {
       timestamps: true,
       underscored: true,
@@ -31,6 +37,12 @@ module.exports = {
     host: env.db.host,
     port: env.db.port,
     dialect: env.db.connection,
-    logging: false
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
   }
 };
