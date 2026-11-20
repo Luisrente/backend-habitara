@@ -212,6 +212,63 @@ class ReservationController {
     }
   }
 
+  async listAll(req, res) {
+    try {
+      const reservations = await ReservationModel.findAll({
+        include: [
+          {
+            model: AccommodationModel,
+            as: 'accommodation',
+            attributes: ['id', 'title', 'price', 'room_type', 'currency']
+          },
+          {
+            model: UserModel,
+            as: 'tenant',
+            attributes: ['id', 'first_name', 'last_name', 'email']
+          },
+          {
+            model: UserModel,
+            as: 'landlord',
+            attributes: ['id', 'first_name', 'last_name', 'email']
+          }
+        ],
+        order: [['createdAt', 'DESC']]
+      });
+
+      const payload = reservations.map((r) => ({
+        id: r.id,
+        status: r.status,
+        startDate: r.start_date,
+        endDate: r.end_date,
+        totalPrice: r.total_price,
+        createdAt: r.createdAt,
+        tenant: r.tenant ? {
+          id: r.tenant.id,
+          firstName: r.tenant.first_name,
+          lastName: r.tenant.last_name,
+          email: r.tenant.email
+        } : null,
+        landlord: r.landlord ? {
+          id: r.landlord.id,
+          firstName: r.landlord.first_name,
+          lastName: r.landlord.last_name,
+          email: r.landlord.email
+        } : null,
+        accommodation: r.accommodation ? {
+          id: r.accommodation.id,
+          title: r.accommodation.title,
+          price: r.accommodation.price,
+          roomType: r.accommodation.room_type,
+          currency: r.accommodation.currency
+        } : null
+      }));
+
+      return res.status(200).json({ success: true, data: payload });
+    } catch (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
   async listBookedDatesByAccommodation(req, res) {
     try {
       const { accommodationId } = req.params;

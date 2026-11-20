@@ -6,6 +6,7 @@ const UserRole = require('../../../domain/user/enums/UserRole');
 
 const router = express.Router();
 
+router.get('/admin/all', authMiddleware, roleMiddleware([UserRole.ADMIN]), ReservationController.listAll);
 router.get('/me', authMiddleware, roleMiddleware([UserRole.TENANT]), ReservationController.listByTenant);
 router.post('/', authMiddleware, roleMiddleware([UserRole.TENANT]), ReservationController.create);
 router.get('/landlord', authMiddleware, roleMiddleware([UserRole.LANDLORD]), ReservationController.listByLandlord);
