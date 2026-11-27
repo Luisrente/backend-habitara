@@ -1,9 +1,54 @@
+const { Op }            = require('sequelize');
 const ConversationModel = require('../../../infrastructure/db/sequelize/models/ConversationModel');
 const MessageModel      = require('../../../infrastructure/db/sequelize/models/MessageModel');
 const ReservationModel  = require('../../../infrastructure/db/sequelize/models/ReservationModel');
 const UserModel         = require('../../../infrastructure/db/sequelize/models/UserModel');
+const AccommodationModel = require('../../../infrastructure/db/sequelize/models/AccommodationModel');
 
 class MessageController {
+
+  // GET /messages/conversations/my — lista todas las conversaciones del usuario
+  async listMine(req, res) {
+    try {
+      const userId = parseInt(req.user.sub, 10);
+
+      const conversations = await ConversationModel.findAll({
+        where: { [Op.or]: [{ landlord_id: userId }, { tenant_id: userId }] },
+        include: [
+          { model: UserModel, as: 'tenant',   attributes: ['id', 'first_name', 'last_name'] },
+          { model: UserModel, as: 'landlord', attributes: ['id', 'first_name', 'last_name'] },
+          { model: AccommodationModel, as: 'accommodation', attributes: ['id', 'title'] },
+          {
+            model: MessageModel,
+            as: 'messages',
+            attributes: ['content', 'createdAt', 'sender_id'],
+            limit: 1,
+            order: [['createdAt', 'DESC']],
+            separate: true,
+          },
+        ],
+        order: [['last_message_at', 'DESC'], ['createdAt', 'DESC']],
+      });
+
+      const payload = conversations.map(c => {
+        const isLandlord = c.landlord_id === userId;
+        const other      = isLandlord ? c.tenant : c.landlord;
+        const lastMsg    = c.messages?.[0] || null;
+        return {
+          id:              c.id,
+          otherName:       other ? `${other.first_name} ${other.last_name}`.trim() : 'Usuario',
+          accommodationTitle: c.accommodation?.title || '',
+          lastMessage:     lastMsg?.content || null,
+          lastMessageAt:   lastMsg?.createdAt || c.createdAt,
+          lastSenderIsMe:  lastMsg?.sender_id === userId,
+        };
+      });
+
+      return res.status(200).json({ success: true, data: payload });
+    } catch (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+  }
 
   // GET/POST /messages/conversations  — crea o recupera la conversación de una reserva
   async getOrCreateConversation(req, res) {
