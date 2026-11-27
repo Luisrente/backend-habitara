@@ -10,6 +10,7 @@ const favoritesRoutes = require('./http/routes/favorites.routes');
 const reservationsRoutes = require('./http/routes/reservations.routes');
 const landlordRequestsRoutes = require('./http/routes/landlord-requests.routes');
 const messagesRoutes         = require('./http/routes/messages.routes');
+const statsRoutes            = require('./http/routes/stats.routes');
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/favorites', favoritesRoutes);
 app.use('/api/reservations', reservationsRoutes);
 app.use('/api/landlord-requests', landlordRequestsRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/admin/stats', statsRoutes);
 
 app.get(
   '/api/admin/test',
